@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+    <head>
+        <style type = "text/css">
+
+            .provinces {    // topo.json 
+                  border: 1px solid #ccc;
+              }
+              
+            .hk {
+                  position:relative;
+                  left:0px;
+                  top:0px;
+              }
+
+            h2 {
+                  text-align: center;
+                  color: black;
+                  font-size: 30px;
+                }
+
+            div {
+                text-align: center;
+                margin: auto; 
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+            }
+        </style>
+    </head>
+    <script src="//d3js.org/d3.v3.min.js"></script>
+    <script src="//d3js.org/queue.v1.min.js"></script>
+    <script src="//d3js.org/topojson.v1.min.js"></script>
+    <script src="//dimplejs.org/dist/dimple.v2.3.0.min.js"></script>
+    <script src="colorbrewer.min.js"></script>  
+    <body>
+
+    <div id="map"></div>
+        <script>
+            // MAP setup
+            var margin = 0,
+                width = 1200 - margin,
+                height = 750 - margin;
+
+            d3.select("body").append("h2").text("LEED in China");  //页面title
+
+            // data of LEED projects in 2018
+            var data=[["Anhui",82],["Jiangxi",11],["Shanxi",1],["Hunan",7],["Hubei",35],["Henan",13],["Shanghai",402],["Jiangsu",125],["Zhejiang",64],["Fujian",13],["Shandong",16],["Beijing",241],["Tianjin",45],["Hebei",4],["Guangdong",158],["Hainan",2],["Taiwan",118],["Hong Kong",186],["Macao",8],["Heilongjiang",4],["Jilin",3],["Liaoning",22],["Inner Mongol",5],["Guangxi",2],["Sichuan",42],["Guizhou",11],["Yunnan",7],["Chongqing",23],["Xizang",0],["Shaanxi",11],["Gansu",1],["Qinghai",0],["Ningxia",1],["Xinjiang",1]];
+
+            var title="";//'LEED in China';
+            var desc=["1. 数据统计截至2018年6月8日，未包含保密(Confidential)申报项目，保密项目共59项"]
+            var credits='By Askka, 2018-09-09';
+            var units='LEED Projects';
+                // DATA 
+                // parse data properly
+                var umap = []
+
+                data.map(function(d) {umap[d[0]]=Number(d[1])});
+                ////console.log(umap);
+
+
+                var svg = d3.select("#map")
+                    .append("svg")                      //采用d3.select("#map").append("svg")新增svg需注意div顺序
+                    .attr("width",  width + margin)
+                    .attr("height", height + margin)
+                    //.attr("preserveAspectRatio", "xMidYMid")
+                    //.attr("viewBox", "0 0 " + width + " " + height);
+                    
+                // 色阶填充参考https://bl.ocks.org/mbostock/4060606
+                // 范例所使用的d3.v4代码在v3下执行不正确，需修改为V3版本
+                var v = Object.keys(umap).map(function(k){return umap[k]})
+                 ////console.log(v);
+
+                // LOAD DATA
+                queue()
+                    .defer(d3.json, "maps/zh-mainland-provinces.topo.json") // mainland
+                    .defer(d3.json, "maps/zh-chn-twn.topo.json") // taiwan 
+                    .defer(d3.json, "maps/zh-hkg-mac.topo.json") // hk and macau
+                    .await(drawMap); // function that uses files
+
+                // DRAW 
+                // create SVG map
+                var projection = d3.geo.mercator()
+                    .center([116,39])
+                    .scale(750)
+                    .translate([(width + margin) / 1.8, (height + margin) / 2.1]);
+
+                var path = d3.geo.path()
+                    .projection(projection);
+
+                // COLORS
+                // define color scale
+                // 
+                var paleGreen = colorbrewer.Greens[9][3],   // 浅绿
+                    darkGreen = colorbrewer.Greens[9][8];   // 深绿
+
+                var colorScale = d3.scale.linear()
+                           .domain([0,450])               //将值域固定为[0,450]，最大值为2018年上海402
+                           .interpolate(d3.interpolateHcl)      //插补HCL颜色
+                           //.range(['white','green'])
+                           .range([paleGreen,darkGreen]); //填充绿色sequence色阶
+
+                // add grey color if no values
+                var color = function(i){ 
+                    if (i==undefined) {return "#fff"}
+                    else return colorScale(i)
+                }
+                // 用于渐变色阶的映射
+                var color_inverse = d3.scale.linear()
+                                      .domain([200,0])                  // 拟绘制的渐变色阶高度200
+                                      .interpolate(d3.interpolateHcl)
+                                      .range([paleGreen, darkGreen]);
+              
+                // TITLE AND INFOS
+                svg.append('g')
+                    .attr("class","info")
+                    .attr("transform", "translate(100,0)")
+                    .append("rect")
+                    //.attr({fill : "transparent", height: 160,width:160})
+
+                svg.append("g")
+                    .attr("class", "title")
+                    .append("text")
+                    .attr("transform", "translate(600,10)")
+                    .attr("dx", function(d){return 0;})          
+                    //.attr("transform", "translate(0,-70)")
+                    .attr("dy", function(d){return 30;})
+                    .attr("text-anchor", "middle")  
+                    .attr("font-family", "STHeiti")
+                    .attr("fill", "#000")
+                    .style("text-decoration", "bold")  
+                    .attr("font-size", "40px").text(title);
+
+
+                svg.select('.info')
+                    .append("g")
+                    .attr("class","legend")
+                    .append("text")
+                    .attr("transform", "translate(10,100)")
+                    .attr("dx", function(d){return 0})          
+                    .attr("dy", 12 )
+                    .attr("text-anchor", "start")  
+                    .attr("font-family", "STHeiti")
+                    .attr("fill", "#000")
+                    .attr("font-size", 12)
+                    .text(desc);
+
+
+                svg.select('.info')
+                    .append("g")
+                    .attr("class","credits")
+                    .attr("transform", "translate(0,650)")
+                    .append("text")
+                    .attr("dx", function(d){return 0})          
+                    .attr("dy", 9 )
+                    .attr("text-anchor", "start")  
+                    .attr("font-family", "sans-serif")
+                    .attr("fill", "#aaaaaa")
+                    .attr("font-size", 11)
+                    .text(credits);
+
+                // Color bar adapted from http://tributary.io/tributary/3650755/
+                
+                var caption_y=d3.range(0,200,20);        //渐变色阶条y坐标
+
+                svg.append("g")
+                    .attr("class","caption")
+                    .attr("transform", "translate(800, 450)")   //色阶移位至（800,500）
+                    .selectAll("rect")
+                    .data(caption_y.map(function(d){return d;}))
+                    .enter()
+                    .append("rect")
+                    .attr("y", function(s) {return s;})
+                    .attr("x", 30)
+                    .attr("width", 15)
+                    .attr("height", 20)
+                    .attr("fill",function(d) { return color_inverse(d)});
+                    
+
+                svg.select(".caption")
+                    .append("g")
+                    .attr("transform", "translate(40,0)")   //坐标值相对移位
+                    .call(d3.svg.axis()
+                           .scale(d3.scale.linear().domain([0,450]).range([200,0]))
+                            .orient("right"))
+                    .attr("font-family", "sans-serif")
+                    .attr("fill", "#000")
+                    .attr("font-size", 10)
+                    .select(".domain")
+                    .remove();
+
+                svg.select('.caption')
+                    .append("g")
+                    .attr("class","units")
+                    .append("text")
+                    .attr("transform", "translate(20,-14)")   //坐标值相对移位
+                    .attr("text-anchor", "start")  
+                    .attr("font-family", "sans-serif")
+                    .attr("fill", "#000")
+                    .attr("font-size", 9)
+                    .text(units);
+                    
+
+
+                // DRAW
+                // https://github.com/tangyefei/trt/blob/f51ac60f08062ea2a42436a3c200b926006fed5d/d3map.js
+                function drawMap(error,mainland,taiwan,hkmacau) {
+                    drawProvinces(error,mainland);
+                    drawTaiwan(error,taiwan);
+                    drawHkMacau(error,hkmacau);
+                }
+
+                // Mainland provinces
+                function drawProvinces(error, cn) {
+                    
+                    // var codes=[];
+                    // for (var i = 0; i < topojson.feature(cn, cn.objects.provinces).features.length; i++) {
+                    //     codes.push(topojson.feature(cn, cn.objects.provinces).features[i].properties.name)
+                    // };
+                    // //console.log(codes);
+
+                    svg.append("g")
+                        .attr("class", "map")
+                        .append("g")
+                        .attr("class", "mainland")
+                        .selectAll("path")
+                        .data(topojson.feature(cn, cn.objects.provinces).features)
+                        .enter()
+                        .append("path")
+                        .attr("d", path)
+                        .attr("id", function(d) { return d.id; })
+                        .attr("class", "province")
+                        .attr("fill", "#cccccc")
+                        .attr("fill", function(d) { return color(umap[d.properties.name]); })
+                        .attr("stroke", "black")
+                        .attr("stroke-width", "0.1");
+                    }
+
+                // Taiwan
+                function drawTaiwan(error, cn) {
+                    // //console.log(error)
+                    //console.log(topojson.feature(cn, cn.objects.layer1))
+
+                    // Taiwan
+                    svg.select(".map")
+                        .append('g')
+                        .attr("class", "taiwan")
+                        .selectAll("path")
+                        .data(topojson.feature(cn, cn.objects.layer1).features.filter(function(d) { return d.properties.GU_A3 === 'TWN'; }))
+                        .enter()
+                        .append("path")
+                        .attr("d", path)
+                        .attr("id", function(d) { return d.id; })
+                        .attr("class", "province")
+                        .attr("fill", "#cccccc")
+                        .attr("fill", function(d) { return color(umap["Taiwan"]); })
+                        .attr("stroke", "black")
+                        .attr("stroke-width", "0.1");
+                }
+
+                // HK and Macau
+                function drawHkMacau(error, cn) {
+                    // //console.log(error)
+                    
+                    // //console.log(topojson.feature(cn, cn.objects.layer1).features.filter(function(d) { return d.properties.GU_A3 === "HKG" }))
+
+                    var projection2 = d3.geo.mercator()
+                    .center([126,19]) //将香港澳门放大单独绘制
+                    .scale(2000);
+
+                    var path2 = d3.geo.path()
+                        .projection(projection2);
+                  
+                    svg.select('.map')
+                        .append("g")
+                        .attr("class", "hk")
+                        .attr("transform", "translate(630,530)")
+                        .selectAll("path")
+                        .data(topojson.feature(cn, cn.objects.layer1).features)
+                        .enter()
+                        .append("path")
+                        .attr("d", path2)
+                        .attr("id", function(d) { return d.id; })
+                        .attr("class", "province")
+                        .attr("fill", function(d) { return color(umap[d.properties.NAME]); })
+                        .attr("stroke", "black")
+                        .attr("stroke-width", "0.1");
+
+                    svg.select(".hk")
+                        .append("text") //add some text
+                        .attr("dx", function(d){return 30})
+                        .attr("dy", function(d){return 110})
+                        .attr("font-family", "sans-serif")
+                        .attr("fill", "#aaaaaa")
+                        .attr("font-size", 12)
+                        .text("港澳局部放大")
+
+                }
+
+                function wrap(text, width) {
+                  text.each(function() {
+                    var text = d3.select(this),
+                        words = text.text().split(/\s+/).reverse(),
+                        word,
+                        line = [],
+                        lineNumber = 0,
+                        lineHeight = 0.7, // ems
+                        y = text.attr("y"),
+                        dy = parseFloat(text.attr("dy")),
+                        tspan = text.text(null).append("tspan").attr("x", 0).attr("y", y).attr("dy", dy );
+                    while (word = words.pop()) {
+                      line.push(word);
+                      tspan.text(line.join(" "));
+                      if (tspan.node().getComputedTextLength() > width) {
+                        line.pop();
+                        tspan.text(line.join(" "));
+                        line = [word];
+                        tspan = text.append("tspan").attr("x", 0).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy ).text(word);
+                      }
+                    }
+                  });
+                }
+
+        </script>   
+
+    </body>
+</html>

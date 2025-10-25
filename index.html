@@ -14,15 +14,23 @@
        <div id="container" style="height: 100%"></div>
        <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
        <div id="container" style="height: 100%"></div>
-       <script type="text/javascript" src="https://echarts.baidu.com/gallery/vendors/echarts/echarts.min.js"></script>
-       <script type="text/javascript" src="https://echarts.baidu.com/gallery/vendors/echarts-gl/echarts-gl.min.js"></script>
-       <script type="text/javascript" src="https://echarts.baidu.com/gallery/vendors/echarts-stat/ecStat.min.js"></script>
-       <script type="text/javascript" src="https://echarts.baidu.com/gallery/vendors/echarts/extension/dataTool.min.js"></script>
-       <script type="text/javascript" src="https://echarts.baidu.com/gallery/vendors/echarts/map/js/china.js"></script>
-       <script type="text/javascript" src="https://echarts.baidu.com/gallery/vendors/echarts/map/js/world.js"></script>
-       <script type="text/javascript" src="http://api.map.baidu.com/getscript?v=2.0&ak=ZUONbpqGBsYGXNIYHicvbAbM&services=&t=20180823194355"></script>
-        <script type="text/javascript" src="https://echarts.baidu.com/gallery/vendors/echarts/extension/bmap.min.js"></script>
-       <script type="text/javascript" src="https://echarts.baidu.com/gallery/vendors/simplex.js"></script>
+         <!-- 1. 核心 -->
+         <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+         
+         <!-- 2. 三维、统计、数据工具（按需留） -->
+         <script src="https://cdn.jsdelivr.net/npm/echarts-gl@2/dist/echarts-gl.min.js"></script>
+         <script src="https://cdn.jsdelivr.net/npm/echarts-stat@1/dist/ecStat.min.js"></script>
+         <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/extension/dataTool.min.js"></script>
+         
+         <!-- 3. 地图数据 -->
+         <script src="https://cdn.jsdelivr.net/npm/echarts@5/map/js/china.js"></script>
+         <script src="https://cdn.jsdelivr.net/npm/echarts@5/map/js/world.js"></script>
+         
+         <!-- 4. 百度地图扩展（必须放在 bmap.min.js 之前） -->
+         <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/extension/bmap.min.js"></script>
+         
+         <!-- 5. simplex 噪声（原项目用到就留） -->
+         <script src="https://cdn.jsdelivr.net/npm/simplex-noise@2/simplex-noise.min.js"></script>
        <script type="text/javascript">
 //初始化
 var dom = document.getElementById("container");

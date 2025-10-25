@@ -424,7 +424,7 @@ var convertData = function (data) {
 
     myChart.showLoading();
 
-    $.get("cnleed.json", function (data) {
+    $.getJSON("cnleed.json", function (data) {
         /*
         将json文件导入，数据格式：
         timeline：[2005,2006,……2017,2018]        //LEED统计年份数组

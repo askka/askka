@@ -438,7 +438,8 @@ var convertData = function (data) {
                      [{name:"北京",value:216}, …{name:"西藏",value:0}]]    
         */
         // 解析json文本赋值给object
-        cnDataset = eval('('+ data +')');
+       // cnDataset = eval('('+ data +')');
+       cnDataset = console.log(json); 
         // 调用完成后将loading动画停止
         myChart.hideLoading();
 
